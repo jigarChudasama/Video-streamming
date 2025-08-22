@@ -1,0 +1,12 @@
+{
+  "name": "video-streamming",
+  "version": "1.0.0",
+  "description": "backend for video streamming app ",
+  "license": "ISC",
+  "author": "jigar chudasama",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
