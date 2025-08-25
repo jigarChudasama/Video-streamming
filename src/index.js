@@ -12,12 +12,12 @@ connectDB()
         console.log(`server is running in ${process.env.PORT}`)
     } )
     app.on('error', (error) => {
-                console.log( "connection error in app.on" , error)
+                console.log( "connection error in index.js" , error)
                 throw error
             })
 } )
 .catch( (err)=>{
-    console.log(" Mongo DB connection error " , err )
+    console.log(" Mongo DB connection error index.js" , err )
 } )
 
 
