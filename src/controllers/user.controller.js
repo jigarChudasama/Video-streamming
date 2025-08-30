@@ -4,6 +4,7 @@ import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from 'jsonwebtoken'
+import { deleteFromCloudinary } from "../utils/OldImageDelete.js";
 
 // =================== Generate Tokens ===================
 const generateAccessAndRefereshTokens = async (userId) => {
@@ -130,7 +131,6 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 });
 
-
 // =================== Logout User ===================
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
@@ -236,6 +236,7 @@ const ChnagePassword = asyncHandler(async (req, res) => {
         )
 
 })
+
 // =================== get currnt user ===================
 const getCurrntUser = asyncHandler(async (req, res) => {
     return res
@@ -244,6 +245,7 @@ const getCurrntUser = asyncHandler(async (req, res) => {
             new ApiResponse(200, req.user, "Current data fetch successfully")
         )
 })
+
 // =================== update user  ===================
 const updateUserDetail = asyncHandler(async (req, res) => {
     const { fullname, email } = req.body
@@ -275,8 +277,7 @@ const updateUserDetail = asyncHandler(async (req, res) => {
 
 })
 
-// =================== change avatar  ===================
-
+// ================== change avatar  ===================
 const changeAvatar = asyncHandler(async (req, res) => {
     const localAvatarPath = req.file?.path
 
@@ -284,10 +285,17 @@ const changeAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "avatar file path not recognized")
     }
 
-    const avatar = uploadOnCloudinary(localAvatarPath)
+    const avatar = await uploadOnCloudinary(localAvatarPath)
 
     if (!avatar.url) {
         throw new ApiError(400, "Error while uploading an avatar")
+    }
+
+    const OldUser = await User.findById(req.user._id);
+
+    // Delete old avatar from cloudinary if exists
+    if (OldUser?.avatar?.public_id) {
+        await deleteFromCloudinary(OldUser.avatar.public_id);
     }
 
     const user = await User.findByIdAndUpdate(
@@ -314,6 +322,7 @@ const changeAvatar = asyncHandler(async (req, res) => {
         )
 })
 
+// =================== change coverImage  ===================
 const updateCoverImage = asyncHandler(async (req, res) => {
 
     const localCoverImagePath = req.file?.path
@@ -326,6 +335,12 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
     if (!coverImage) {
         throw new ApiError(401, "Error while uploading an cover image ")
+    }
+
+    const OldUser = await User.findById(req.user._id);
+
+    if (OldUser?.coverImage?.public_id) {
+        await deleteFromCloudinary(OldUser.coverImage.public_id);
     }
 
     const user = await User.findByIdAndUpdate(
@@ -352,6 +367,77 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
 })
 
+const getUserChannelProfile = asyncHandler ( async ( req , res)=>{
+    const {username} = req.params
+
+    if(!username?.trim()){
+        throw new ApiError(400 , "username is missing")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match : {
+                username : username.toLowerCase()
+            }
+        },
+        {
+            $lookup : {
+                from : "subscriptions",
+                localField : "_id",
+                foreignField : "channel",
+                as : "subscribers"
+            }
+        },
+        {
+            $lookup : {
+                from : "subscriptions",
+                localField : "_id",
+                foreignField : "subscriber",
+                as : "subscribedTo"
+            }
+        },
+        {
+            $addFields : {
+                subscribersCount : {
+                    $size : "$subscribers"
+                },
+                channelSubscribedToCount : {
+                    $size : "$subscribedTo"
+                },
+                isSubscribed : {
+                    $cond : {
+                        if : {$in : [req.user?._id, "$subscribers.subscriber"]},
+                        then : true,
+                        else : false
+                    }
+                }
+            }
+        },
+        {
+            $project : {
+                fullname : 1,
+                username : 1,
+                avatar : 1,
+                coverImage : 1,
+                email : 1,
+                subscribersCount : 1,
+                channelSubscribedToCount : 1,
+                isSubscribed : 1
+            }
+        }
+    ])
+
+    if(!channel?.length){
+        throw new ApiError(404 , "channel dose not exsist")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200 , channel[0] , "user channel fetch successfully")
+    )
+})
+
 // =================== Exports ===================
 export {
     registerUser,
@@ -362,5 +448,6 @@ export {
     getCurrntUser,
     updateUserDetail,
     changeAvatar,
-    updateCoverImage    
+    updateCoverImage,
+    getUserChannelProfile
 };
