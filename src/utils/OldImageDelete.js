@@ -1,5 +1,5 @@
-import { ApiError } from "./ApiError";
-import { uploadOnCloudinary } from "./cloudinary";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "./cloudinary.js";
 
 
 const deleteFromCloudinary = async (publicId) => {

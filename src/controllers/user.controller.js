@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from '../utils/ApiError.js';
+import { ApiError } from "../utils/ApiError.js"; 
 import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -210,33 +210,35 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 // =================== change password  ===================
 
-const ChnagePassword = asyncHandler(async (req, res) => {
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
 
-    const { oldPassword, newPassword } = req.body
+  // Get logged-in user
+  const user = await User.findById(req.user._id);
+    // console.log(user)
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
 
-    const user = await User.findById(req.user._id)
-    const isPasswordCurrrect = await user.isPasswordCorrect(oldPassword)
+  // Compare old password
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
-    if (!isPasswordCurrrect) {
-        throw new ApiError(401, "invalid password")
-    }
+  if (!isPasswordCorrect) {
+    throw new ApiError(401, "Invalid old password");
+  }
 
-    user.password = newPassword
-    await user.save({ validateBeforeSave: true })
+  // Update password
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: true });
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                {
-                    newPassword
-                },
-                "Password change successfullly"
-            )
-        )
-
-})
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {},
+      "Password changed successfully"
+    )
+  );
+});
 
 // =================== get currnt user ===================
 const getCurrntUser = asyncHandler(async (req, res) => {
@@ -503,7 +505,7 @@ export {
     loginUser,
     logoutUser,
     refreshAccessToken,
-    ChnagePassword,
+    changePassword,
     getCurrntUser,
     updateUserDetail,
     updateUserAvatar,
