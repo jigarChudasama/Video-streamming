@@ -1,15 +1,15 @@
+import { v2 as cloudinary } from "cloudinary";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadOnCloudinary } from "./cloudinary.js";
-
 
 const deleteFromCloudinary = async (publicId) => {
   try {
     if (!publicId) return null;
-    const result = await uploadOnCloudinary.uploader.destroy(publicId);
-    return result; // { result: 'ok' }
+
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result; // { result: 'ok' } on success
   } catch (error) {
-    throw new ApiError(401, error?.message || "Error  while deleting an image ")
+    throw new ApiError(500, error?.message || "Error while deleting file from Cloudinary");
   }
 };
 
-export { deleteFromCloudinary }
+export { deleteFromCloudinary };

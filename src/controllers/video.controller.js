@@ -12,7 +12,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
 
     try {
-        const filter = {};
+        let filter = {};
         if (query) {
             filter = {
                 $or: [
@@ -34,24 +34,16 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
         const skip = (page - 1) * limit;
 
-        const videos = await video.find(filter)
+        const videos = await Video.find(filter)
             .sort(sortOptions)
             .skip(skip)
-            .limit(parseInt(limit))
+            .limit(parseInt(limit));
 
         const totalVideos = await Video.countDocuments(filter);
 
-    } catch (error) {
-        throw new ApiError(
-            200,
-            error.message || "somethis went wrong in sort the data "
-        )
-    }
-    return res
-        .status(200)
-        .json(
+        return res.status(200).json(
             new ApiResponse(200, {
-                Video,
+                videos,
                 pagination: {
                     total: totalVideos,
                     page: Number(page),
@@ -60,6 +52,12 @@ const getAllVideos = asyncHandler(async (req, res) => {
                 },
             }, "Videos fetched successfully")
         );
+
+    } catch (error) {
+        throw new ApiError(500, error.message || "Something went wrong while fetching videos");
+
+    }
+
 });
 
 
@@ -68,7 +66,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     // TODO: get video, upload to cloudinary, create video
     if ([title, description].some((field) => field?.trim() === "")) {
         throw new ApiError(
-            401,
+            400,
             "all fields need to me filled"
         )
     }
@@ -78,7 +76,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     if (!localVideoPath || !localThumbnailPath) {
         throw new ApiError(
-            401,
+            400,
             "video and thumbnail path needed"
         )
     }
@@ -100,9 +98,15 @@ const publishAVideo = asyncHandler(async (req, res) => {
         )
     }
 
-    const videoDb = Video.create({
-        videoFile: video.url,
-        thumbnail: thumbnail.url,
+    const videoDb = await Video.create({
+        videoFile: {
+            url: video.secure_url,
+            public_id: video.public_id
+        },
+        thumbnail: {
+            url: thumbnail.secure_url,
+            public_id: thumbnail.public_id
+        },
         owner: req.user._id,
         title,
         description,
@@ -125,15 +129,14 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    //TODO: get video by id
-    const video = Video.findById(videoId).populate('owner', 'username email')
+    const video = await Video.findById(videoId).populate('owner', 'username email')
 
     if (!video) {
         throw new ApiError(404, "video not found")
     }
 
     if (!video.isPublished) {
-        throw new ApiError(401, "this video is not published")
+        throw new ApiError(403, "this video is not published")
     }
 
     return res
@@ -150,28 +153,27 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     let updateData = {};
 
-    // Handle thumbnail if a new one is uploaded
     if (req.file?.path) {
         const thumbnail = await uploadOnCloudinary(req.file.path);
 
-        if (!thumbnail?.url) {
+        if (!thumbnail?.secure_url) {
             throw new ApiError(400, "Error while uploading thumbnail");
         }
 
-        // Find old video to delete old thumbnail (if you stored public_id earlier)
         const oldVideo = await Video.findById(videoId);
         if (oldVideo?.thumbnail?.public_id) {
             await deleteFromCloudinary(oldVideo.thumbnail.public_id);
         }
 
-        updateData.thumbnail = thumbnail.url; // or { url: thumbnail.url, public_id: thumbnail.public_id }
+        updateData.thumbnail = {
+            url: thumbnail.secure_url,
+            public_id: thumbnail.public_id
+        };
     }
 
-    // Add other fields
     if (title) updateData.title = title;
     if (description) updateData.description = description;
 
-    // Update video
     const video = await Video.findByIdAndUpdate(
         videoId,
         { $set: updateData },
@@ -189,13 +191,23 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 
 const deleteVideo = asyncHandler(async (req, res) => {
-    //TODO: delete video
     const { videoId } = req.params
-    const result = await Video.findByIdAndDelete(videoId)
 
-    if (!result) {
-        throw new ApiError(404, " video not found ")
+    const video = await Video.findById(videoId)
+
+    if (!video) {
+        throw new ApiError(404, "Video not found ")
     }
+
+    if (video?.videoFile?.public_id) {
+        await deleteFromCloudinary(video.videoFile.public_id)
+    }
+
+    if (video?.thumbnail?.public_id) {
+        await deleteFromCloudinary(video.thumbnail.public_id)
+    }
+
+    await Video.findByIdAndDelete(videoId)
 
     return res
         .status(200)
@@ -209,22 +221,22 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(videoId)
 
-    if(!video){
-        throw new ApiError(404 , "video not found")
+    if (!video) {
+        throw new ApiError(404, "video not found")
     }
 
-    if(video.owner.toString() !== req.user._id.toString() ){
-        throw new ApiError(401 , "unauthorized user can not modify video")
+    if (video.owner.toString() !== req.user._id.toString()) {
+        throw new ApiError(401, "unauthorized user can not modify video")
     }
 
     video.isPublished = !video.isPublished;
     await video.save();
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200 , video?.isPublished , "toggle complate " )
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, { isPublished: video.isPublished }, "Toggle complete")
+        )
 
 })
 
