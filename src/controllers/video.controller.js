@@ -131,6 +131,10 @@ const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     const video = await Video.findById(videoId).populate('owner', 'username email')
 
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Unauthorized video_id")
+    }
+
     if (!video) {
         throw new ApiError(404, "video not found")
     }
@@ -150,6 +154,10 @@ const getVideoById = asyncHandler(async (req, res) => {
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const { title, description } = req.body;
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Unauthorized video_id")
+    }
 
     let updateData = {};
 
@@ -193,6 +201,10 @@ const updateVideo = asyncHandler(async (req, res) => {
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
 
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Unauthorized video_id")
+    }
+
     const video = await Video.findById(videoId)
 
     if (!video) {
@@ -218,6 +230,10 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Unauthorized video_id")
+    }
 
     const video = await Video.findById(videoId)
 
