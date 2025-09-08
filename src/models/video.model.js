@@ -8,7 +8,6 @@ const videoSchema = new Schema(
                 type: String,
                 required: true
             },
-
             public_id: {
                 type: String,
                 required: true
@@ -26,11 +25,12 @@ const videoSchema = new Schema(
         },
         owner: {
             type: Schema.Types.ObjectId,
-            ref: 'User',
+            ref: "User",
+            required: true
         },
         title: {
             type: String,
-            required: true,
+            required: true
         },
         description: {
             type: String,
@@ -40,22 +40,18 @@ const videoSchema = new Schema(
             type: Number,
             required: true
         },
-        view: {
+        views: {
             type: Number,
-            required: true,
             default: 0
         },
         isPublished: {
             type: Boolean,
-            required: true,
             default: true
         }
     },
-    {
-        timestamps: true
-    }
-)
+    { timestamps: true }
+);
 
-videoSchema.plugin(mongooseAggregatePaginate)
+videoSchema.plugin(mongooseAggregatePaginate);
 
-export const Video = mongoose.model("Video", videoSchema)
+export const Video = mongoose.model("Video", videoSchema);
