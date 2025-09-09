@@ -11,10 +11,9 @@ function Register() {
     }
   };
 
-
   return (
     <>
-      <div className="h-screen overflow-y-auto bg-[#121212] text-white">
+      <div className=" overflow-y-auto bg-[#121212] text-white" style={{ height: "calc(100vh - 82.02px)" }} >
         <div className="mx-auto my-8 flex w-full max-w-sm flex-col px-4">
 
           {/* Logo */}
@@ -55,7 +54,7 @@ function Register() {
           </div>
           {/* Title */}
           <div className="mb-6 w-full text-center text-2xl font-semibold uppercase">
-            Register
+            Sign up
           </div>
 
           <div className="flex flex-col items-center max-w-md " >
@@ -105,6 +104,28 @@ function Register() {
             className="mb-4 rounded-lg border bg-transparent px-3 py-2"
           />
 
+          {/* Password */}
+          <label htmlFor="password" className="mb-1 inline-block text-gray-300">
+            Password*
+          </label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            className="mb-4 rounded-lg border bg-transparent px-3 py-2"
+          />
+
+          {/* Confirm Password */}
+          <label htmlFor="confirmPassword" className="mb-1 inline-block text-gray-300">
+            Confirm Password*
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            placeholder="Confirm your password"
+            className="mb-6 rounded-lg border bg-transparent px-3 py-2"
+          />
+
           {/* Avatar Upload */}
           <label htmlFor="avatar" className="mb-1 inline-block text-gray-300">
             Avatar (Profile Picture)*
@@ -126,28 +147,6 @@ function Register() {
             type="file"
             accept="image/*"
             className="mb-4 rounded-lg border bg-transparent px-3 py-2"
-          />
-
-          {/* Password */}
-          <label htmlFor="password" className="mb-1 inline-block text-gray-300">
-            Password*
-          </label>
-          <input
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            className="mb-4 rounded-lg border bg-transparent px-3 py-2"
-          />
-
-          {/* Confirm Password */}
-          <label htmlFor="confirmPassword" className="mb-1 inline-block text-gray-300">
-            Confirm Password*
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            placeholder="Confirm your password"
-            className="mb-6 rounded-lg border bg-transparent px-3 py-2"
           />
 
           {/* Submit Button */}

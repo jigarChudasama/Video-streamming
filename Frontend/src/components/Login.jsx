@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
 
 function Login() {
   return (
     <>
-      <div className="h-screen overflow-y-auto bg-[#121212] text-white">
-        <div className="mx-auto my-8 flex w-full max-w-sm flex-col px-4 justify-center ">
+      <div className=" overflow-auto bg-[#121212] text-white" style={{ height: "calc(100vh - 82.02px)" }} >
+        <div className="mx-auto my-8 flex w-full max-w-sm flex-col px-4  ">
 
           {/* Logo */}
           <div className="mx-auto inline-block w-16 mb-6">
@@ -44,7 +43,7 @@ function Login() {
           </div>
           {/* Title */}
           <div className="mb-6 w-full text-center text-2xl font-semibold uppercase">
-            Login
+            Log In
           </div>
 
           {/* Email */}
