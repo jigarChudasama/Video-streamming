@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { BtnIcon, DislikeTweet, Emoji, LikeTweet, ThreeDot } from '../components/Icons';
+import { useNavigate } from 'react-router-dom';
 
-const subscribers = [
+const subscribeds = [
     {
         name: "Code Master",
         subs: "20K",
@@ -264,13 +265,15 @@ const tweets = [
 function MyChannelPage() {
     const [activeTab, setActiveTab] = useState("videos")
 
-    const [channels, setChannels] = useState(subscribers);
+    const [channels, setChannels] = useState(subscribeds);
 
     const toggleSubscribe = (index) => {
         const updated = [...channels];
         updated[index].isSubscribed = !updated[index].isSubscribed;
         setChannels(updated);
     };
+
+    const navigate = useNavigate()
 
     return (
         <div>
@@ -299,7 +302,7 @@ function MyChannelPage() {
                             <h1 className="font-bold text-xl">React Patterns</h1>
                             <p className="text-sm text-gray-400">@reactpatterns</p>
                             <p className="text-sm text-gray-400">
-                                600k Subscribers&nbsp;·&nbsp;220 Subscribed
+                                600k Subscribers&nbsp;·&nbsp;10 Subscribed
                             </p>
                         </div>
                         <div className="inline-block">
@@ -369,7 +372,9 @@ function MyChannelPage() {
                             <div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 pt-2">
                                 {
                                     videos.map((video) => (
-                                        <div key={video.id} className="w-full">
+                                        <div key={video.id} onClick={()=>{
+                                            navigate("/my-channel-page/video-detail")
+                                        }} className="w-full">
                                             <div className="relative mb-2 w-full pt-[56%]">
                                                 <div className="absolute inset-0">
                                                     <img src={video.thumbnail}
@@ -405,7 +410,9 @@ function MyChannelPage() {
                             <div className="grid gap-4 pt-2 sm:grid-cols-[repeat(auto-fit,_minmax(400px,_1fr))]">
                                 {
                                     playlists.map((playlist) => (
-                                        <div key={playlist.id} className="w-full" >
+                                        <div key={playlist.id} className="w-full" onClick={()=>{
+                                            navigate("/my-channel-page/playlist-detail")
+                                        }} >
                                             <div className="relative mb-2 w-full pt-[56%]">
                                                 <div className="absolute inset-0">
                                                     <img src={playlist.thumbnail} alt={playlist.title} className="h-full w-full" />
@@ -563,7 +570,7 @@ function MyChannelPage() {
                             //                 </span>
                             //             </span>
                             //         </p>
-                            //         <h5 className="mb-2 font-semibold">No people subscribers</h5>
+                            //         <h5 className="mb-2 font-semibold">No people subscribeds</h5>
                             //         <p>
                             //             This channel has yet to
                             //             <strong>subscribe</strong>

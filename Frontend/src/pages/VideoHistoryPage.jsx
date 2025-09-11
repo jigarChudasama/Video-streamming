@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const histroyVideos = [
     {
@@ -192,6 +193,7 @@ const histroyVideos = [
 
 function VideoHistoryPage() {
 
+    const navigate = useNavigate()
 
     return (
         <div>
@@ -199,7 +201,11 @@ function VideoHistoryPage() {
                 <div className="flex flex-col gap-4 p-4">
                     {
                         histroyVideos.map((histroyVideo) => (
-                            <div key={histroyVideo.id} className="w-full max-w-3xl gap-x-4 md:flex">
+                            <div key={histroyVideo.id}
+                                onClick={() => {
+                                    navigate("/video-history-page/video-detail")
+                                }}
+                                className="w-full max-w-3xl gap-x-4 md:flex">
                                 <div className="relative mb-2 w-full md:mb-0 md:w-5/12">
                                     <div className="w-full pt-[56%]">
                                         <div className="absolute inset-0">
