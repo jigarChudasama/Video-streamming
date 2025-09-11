@@ -1,5 +1,5 @@
 import React from 'react'
-import { Cross, Loading, Media } from '../Icons'
+import { Cross, Loading, Media, Success } from '../Icons'
 
 function VideoUploadingModel({ videoUploadingModel, setVideoUploadingModel }) {
     // console.log("videoUploadingModel----->",videoUploadingModel)
@@ -20,7 +20,7 @@ function VideoUploadingModel({ videoUploadingModel, setVideoUploadingModel }) {
                                 setVideoUploadingModel(false)
                             }}
                         >
-                           <Cross />
+                            <Cross />
                         </button>
                     </div>
                     <div className="mb-6 flex gap-x-2 border p-3">
@@ -34,6 +34,7 @@ function VideoUploadingModel({ videoUploadingModel, setVideoUploadingModel }) {
                             <p className="text-sm">16 MB</p>
                             <div className="mt-2">
                                 <Loading />
+                                <Success />
                                 Uploading...
                             </div>
                         </div>
@@ -45,6 +46,9 @@ function VideoUploadingModel({ videoUploadingModel, setVideoUploadingModel }) {
                             }}
                         >Cancel</button>
                         <button
+                            onClick={() => {
+                                setVideoUploadingModel(false)
+                            }}
                             className="bg-[#ae7aff] px-4 py-3 text-black disabled:bg-[#E4D3FF]"
                             disabled=""
                         >

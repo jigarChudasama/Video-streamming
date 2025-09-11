@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom'
 import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
-import AuthLayout from './layout/authLayout'
 import DashboardLayout from './layout/DashboardLayout'
 import LikedVideoPage from './pages/LikedVideoPage'
 import VideoHistoryPage from './pages/VideoHistoryPage'
@@ -13,6 +12,7 @@ import DashboardPage from './pages/DashboardPage'
 import VideoDetailPage from './pages/VideoDetailPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
 import MyContentPage from './pages/MyContentPage'
+import AuthLayout from './layout/AuthLayout'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
