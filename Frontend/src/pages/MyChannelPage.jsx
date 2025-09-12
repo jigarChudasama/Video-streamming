@@ -266,7 +266,7 @@ const tweets = [
 function MyChannelPage() {
     const [activeTab, setActiveTab] = useState("videos")
     const [editActivetab, setEditActiveTab] = useState("PersonalInformation")
-    const [logoutModel , setLogoutModel] = useState(false)
+    const [logoutModel, setLogoutModel] = useState(false)
 
     const [channels, setChannels] = useState(subscribe);
     const [edit, setEdit] = useState(false)
@@ -374,9 +374,9 @@ function MyChannelPage() {
                                     {
                                         edit && (
                                             <button
-                                            onClick={()=>{
-                                                setLogoutModel(true)
-                                            }}
+                                                onClick={() => {
+                                                    setLogoutModel(true)
+                                                }}
                                                 className="group/btn mr-1 flex w-full items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
                                                 <span className="inline-block w-5">
                                                     <Logout />
@@ -489,8 +489,6 @@ function MyChannelPage() {
                             </ul>
                         )
                     }
-
-
 
                     {/* Tab Content */}
 
@@ -1137,7 +1135,7 @@ function MyChannelPage() {
                         )
                     }
                 </div>
-                <LogoutModel logoutModel={logoutModel}  setLogoutModel={setLogoutModel} />
+                <LogoutModel logoutModel={logoutModel} setLogoutModel={setLogoutModel} />
             </section>
         </div>
     )
