@@ -463,6 +463,7 @@ function VideoDetailPage() {
                                     className="w-full rounded-lg border bg-transparent px-2 py-1 placeholder-white"
                                     placeholder="Add a Comment"
                                 />
+                                
                             </div>
                             <hr className="my-4 border-white" />
                             {

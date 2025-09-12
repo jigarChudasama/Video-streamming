@@ -326,3 +326,15 @@ export const Success = () => {
 
     )
 }
+
+export const Logout = () => {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" role="img">
+            <title>Logout</title>
+            <rect x="3" y="4" width="12" height="16" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+            <path d="M15 12h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M18 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+
+    )
+}

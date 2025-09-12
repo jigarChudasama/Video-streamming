@@ -1,6 +1,7 @@
 import React, { use, useState } from 'react'
-import { BtnIcon, DislikeTweet, Edit, Emoji, LikeTweet, ThreeDot } from '../components/Icons';
+import { BtnIcon, DislikeTweet, Edit, Emoji, LikeTweet, Logout, ThreeDot } from '../components/Icons';
 import { useNavigate } from 'react-router-dom';
+import LogoutModel from '../components/model/LogoutModel';
 
 const subscribe = [
     {
@@ -265,6 +266,7 @@ const tweets = [
 function MyChannelPage() {
     const [activeTab, setActiveTab] = useState("videos")
     const [editActivetab, setEditActiveTab] = useState("PersonalInformation")
+    const [logoutModel , setLogoutModel] = useState(false)
 
     const [channels, setChannels] = useState(subscribe);
     const [edit, setEdit] = useState(false)
@@ -368,7 +370,21 @@ function MyChannelPage() {
                                     <span className="group-focus/btn:hidden">Subscribe</span>
                                     <span className="hidden group-focus/btn:block">Subscribed</span>
                                 </button> */}
-                                <div className="inline-block">
+                                <div className=" flex gap-2 ">
+                                    {
+                                        edit && (
+                                            <button
+                                            onClick={()=>{
+                                                setLogoutModel(true)
+                                            }}
+                                                className="group/btn mr-1 flex w-full items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
+                                                <span className="inline-block w-5">
+                                                    <Logout />
+                                                </span>
+                                                Logout
+                                            </button>
+                                        )
+                                    }
                                     <button
                                         onClick={() => {
                                             setEdit((prev) => !prev)
@@ -600,7 +616,7 @@ function MyChannelPage() {
                                                         />
                                                         <p className="mt-0.5 text-sm text-gray-300">275 characters left</p>
                                                     </div>
-                                                    <div className="flex w-full items-center gap-3">
+                                                    {/* <div className="flex w-full items-center gap-3">
                                                         <div className="w-full max-w-xs rounded-lg border">
                                                             <select className="w-full border-r-8 border-transparent bg-transparent py-1.5 pl-2">
                                                                 <option value="light">Light</option>
@@ -787,7 +803,7 @@ function MyChannelPage() {
                                                                 <option value="UTC+14:00">(UTC+14:00) Kiritimati</option>
                                                             </select>
                                                         </div>
-                                                    </div>
+                                                    </div> */}
                                                 </div>
                                                 <hr className="border border-gray-300" />
                                                 <div className="flex items-center justify-end gap-4 p-4">
@@ -1121,6 +1137,7 @@ function MyChannelPage() {
                         )
                     }
                 </div>
+                <LogoutModel logoutModel={logoutModel}  setLogoutModel={setLogoutModel} />
             </section>
         </div>
     )
