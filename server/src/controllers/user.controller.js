@@ -91,8 +91,6 @@ const registerUser = asyncHandler(async (req, res) => {
       200,
       {
         user: createdUser,
-        accessToken,   // now string, not object
-        refreshToken
       },
       "User registered successfully"
     )

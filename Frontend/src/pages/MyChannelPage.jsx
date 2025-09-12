@@ -2,6 +2,7 @@ import React, { use, useState } from 'react'
 import { BtnIcon, DislikeTweet, Edit, Emoji, LikeTweet, Logout, ThreeDot } from '../components/Icons';
 import { useNavigate } from 'react-router-dom';
 import LogoutModel from '../components/model/LogoutModel';
+import { useUser } from '../context/userContect';
 
 const subscribe = [
     {
@@ -278,7 +279,7 @@ function MyChannelPage() {
     };
 
     const navigate = useNavigate()
-
+    const {user} = useUser()
     return (
         <div>
             <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
@@ -355,7 +356,7 @@ function MyChannelPage() {
                             }
                         </span>
                         <div className="mr-auto inline-block">
-                            <h1 className="font-bold text-xl">React Patterns</h1>
+                            <h1 className="font-bold text-xl">{user.fullname}</h1>
                             <p className="text-sm text-gray-400">@reactpatterns</p>
                             <p className="text-sm text-gray-400">
                                 600k Subscribers&nbsp;·&nbsp;10 Subscribed

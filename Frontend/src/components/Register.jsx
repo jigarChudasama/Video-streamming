@@ -13,7 +13,6 @@ function Register() {
     password: false,
     confirmPassword: false
   });
-  const [token, setToken] = useState('')
 
   const [formData, setFromData] = useState({
     fullname: '',
@@ -94,7 +93,6 @@ function Register() {
   };
 
   const onSubmit = async () => {
-    console.log("Form submitted ✅", formData);
     if (loading) return;
 
     try {
@@ -120,8 +118,6 @@ function Register() {
       });
 
       if (res.data?.success) {
-        setCookie("token", res.data.data.accessToken)
-        setToken(res.data.accessToken)
         setFromData(prev => ({
           ...prev,
           fullname: '', 
@@ -134,7 +130,6 @@ function Register() {
         }))
       }
 
-      console.log("✅ User registered:", res.data);
     } catch (error) {
       console.error("❌ Registration failed:", error.response?.data || error.message);
     } finally {
@@ -235,7 +230,7 @@ function Register() {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
-              className="bg-transparent"
+              className="bg-transparent password " 
             />
             <img
               src={showPassword.password ? '/images/eye-off-line.svg' : '/images/eye.svg'}
@@ -266,7 +261,7 @@ function Register() {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your password"
-              className="bg-transparent"
+              className="bg-transparent password "
             />
             <img
               src={showPassword.confirmPassword ? '/images/eye-off-line.svg' : '/images/eye.svg'}
@@ -316,6 +311,7 @@ function Register() {
           <button
             onClick={checkValidation}
             className="bg-[#ae7aff] px-4 py-3 text-black font-medium rounded-lg"
+            disabled = {loading}
           >
             Register Account
           </button>

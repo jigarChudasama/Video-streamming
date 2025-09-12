@@ -13,6 +13,7 @@ import VideoDetailPage from './pages/VideoDetailPage'
 import PlaylistDetailPage from './pages/PlaylistDetailPage'
 import MyContentPage from './pages/MyContentPage'
 import AuthLayout from './layout/AuthLayout'
+import { UserProvider } from './context/userContect'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -57,7 +58,9 @@ const router = createBrowserRouter(
 )
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>
+  <UserProvider >
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>
+  </UserProvider>
 )

@@ -4,3 +4,8 @@
     font-weight: 600;
     letter-spacing: 1px;
 }
+
+.password:focus {
+  outline: none;   /* removes the blue border */
+  box-shadow: none;
+}
