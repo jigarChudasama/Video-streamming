@@ -7,9 +7,14 @@ export const setCookie = (key, value) => {
   cookies.set(key, (value || ''), COOKIE_OPTIONS);
 }
 
-export const getCookie = (key) => {
-  return cookies.get(key) || '';
-}
+// getCookie helper
+export const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
 
 export const removeCookie = (key) => {
   cookies.remove(key, COOKIE_OPTIONS);

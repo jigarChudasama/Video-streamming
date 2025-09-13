@@ -1,9 +1,11 @@
 import React from 'react'
 import { Close, Content, Like, Logo, Manu, Search, SearchBig, Settings, Support } from './Icons'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '../context/userContect'
 
 function DashboaedHeader() {
     const navigate = useNavigate()
+    const {user} = useUser()
     return (
         <div>
             <header className="sticky inset-x-0 top-0 z-50 w-full border-b border-white bg-[#121212] px-4">
@@ -76,11 +78,11 @@ function DashboaedHeader() {
                                 navigate('/my-channel-page')
                              }}
                              className="flex w-full gap-4 text-left sm:items-center">
-                                <img src="https://images.pexels.com/photos/1115816/pexels-photo-1115816.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="React-Patterns" className="h-16 w-16 shrink-0 rounded-full sm:h-12 sm:w-12" />
+                                <img src={user.avatar} alt="React-Patterns" className="h-16 w-16 shrink-0 rounded-full sm:h-12 sm:w-12" />
                                 
                                 <div className="w-full pt-2 sm:hidden">
-                                    <h6 className="font-semibold">React Patterns</h6>
-                                    <p className="text-sm text-gray-300">@reactpatterns</p>
+                                    <h6 className="font-semibold">{user.fullname}</h6>
+                                    <p className="text-sm text-gray-300">@{user.username}</p>
                                 </div>
                             </button>
                         </div>

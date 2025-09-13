@@ -1,8 +1,12 @@
-import React, { use, useState } from 'react'
-import { BtnIcon, DislikeTweet, Edit, Emoji, LikeTweet, Logout, ThreeDot } from '../components/Icons';
+import React, { use, useEffect, useState } from 'react'
+import { BtnIcon, DislikeTweet, Edit, Email, Emoji, LikeTweet, Logout, ThreeDot, UploadImg } from '../components/Icons';
 import { useNavigate } from 'react-router-dom';
 import LogoutModel from '../components/model/LogoutModel';
 import { useUser } from '../context/userContect';
+import { EMAIL_REGEX, FULLNAME_REGEX, SPACE_REGEX } from '../utils/constent';
+import axios from 'axios';
+import { ROOT_URL } from '../utils/rootURL';
+import { getCookie } from '../utils/cookie';
 
 const subscribe = [
     {
@@ -271,6 +275,7 @@ function MyChannelPage() {
 
     const [channels, setChannels] = useState(subscribe);
     const [edit, setEdit] = useState(false)
+    const token = getCookie("accessToken");
 
     const toggleSubscribe = (index) => {
         const updated = [...channels];
@@ -279,7 +284,129 @@ function MyChannelPage() {
     };
 
     const navigate = useNavigate()
-    const {user} = useUser()
+    const { user , setUser  } = useUser();
+
+    const [errorMessage, setErrorMessage] = useState("");
+
+    const [loading, setLoading] = useState(false)
+
+    const [updateUserProfile, setUpdateUserProfile] = useState({
+        email: "",
+        fullname: "",
+        username: "",
+    });
+
+    const [updateUserProfileValidation, setUpdateUserProfileValidation] =
+        useState({
+            email: false,
+            fullname: false,
+            username: false,
+        });
+
+    useEffect(() => {
+        if (user) {
+            setUpdateUserProfile((prev) => ({
+                ...prev,
+                email: user.email || "",
+                fullname: user.fullname || "",
+                username: user.username || "",
+            }));
+        }
+    }, [user]);
+
+    const handleUpdetedProfileChange = (e) => {
+        const { name, value } = e.target;
+
+        if (name === "fullname" && !FULLNAME_REGEX.test(value)) {
+            return;
+        }
+
+        if (name === "username" && !SPACE_REGEX.test(value)) {
+            return;
+        }
+
+        setUpdateUserProfile((prev) => ({ ...prev, [name]: value }));
+        setUpdateUserProfileValidation((prev) => ({ ...prev, [name]: false }));
+    };
+
+    const checkUpdateValidation = () => {
+
+        if (
+            updateUserProfile.email === (user.email || "") &&
+            updateUserProfile.fullname === (user.fullname || "") &&
+            updateUserProfile.username === (user.username || "")
+        ) {
+            setErrorMessage("⚠️ No changes detected. Please update your profile before saving.");
+            return;
+        }
+
+        if (
+            !updateUserProfile.email.trim() ||
+            !EMAIL_REGEX.test(updateUserProfile.email)
+        ) {
+            setUpdateUserProfileValidation((prev) => ({ ...prev, email: true }));
+            return;
+        }
+
+        if (!updateUserProfile.fullname.trim()) {
+            setUpdateUserProfileValidation((prev) => ({ ...prev, fullname: true }));
+            return;
+        }
+
+        if (!updateUserProfile.username.trim()) {
+            setUpdateUserProfileValidation((prev) => ({ ...prev, username: true }));
+            return;
+        }
+
+        updateProfileSubmit();
+    };
+
+    const updateProfileSubmit = async () => {
+        console.log("🚀 Submitting profile:", updateUserProfile);
+        if (loading) return
+        try {
+            setLoading(true);
+
+            const res = await axios.patch(
+                `${ROOT_URL}/users/update-account`,
+                {
+                    // ✅ this is the body (send updated fields here)
+                    email: updateUserProfile.email,
+                    fullname: updateUserProfile.fullname,
+                    username: updateUserProfile.username,
+                },
+                {
+                    // ✅ this is the config (headers, params, etc.)
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (res.data?.success) {
+                console.log("✅ Profile updated successfully");
+
+                setUser((prev) => ({
+                    ...prev, // keep old values like avatar, coverImage, etc.
+                    email: updateUserProfile.email,
+                    fullname: updateUserProfile.fullname,
+                    username: updateUserProfile.username,
+                }));
+            }
+
+        } catch (error) {
+            console.error(
+                "❌ failed to update profile:",
+                error.response?.data || error.message
+            );
+        } finally {
+            setLoading(false);
+        }
+
+    };
+
+
+
     return (
         <div>
             <section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
@@ -293,26 +420,13 @@ function MyChannelPage() {
                     </div>
                     {
                         edit && (
-                            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <input
-                                    type="file"
-                                    id="cover-image"
-                                    class="hidden" />
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                                <input type="file" id="cover-image" className="hidden" />
                                 <label
-                                    for="cover-image"
-                                    class="inline-block h-10 w-10 cursor-pointer rounded-lg bg-white/60 p-1 text-[#ae7aff] hover:bg-white">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke-width="1.5"
-                                        stroke="currentColor"
-                                        aria-hidden="true">
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"></path>
-                                    </svg>
+                                    htmlFor="cover-image"
+                                    className="inline-block h-10 w-10 cursor-pointer rounded-lg bg-white/60 p-1 text-[#ae7aff] hover:bg-white"
+                                >
+                                    <UploadImg />
                                 </label>
                             </div>
                         )
@@ -324,7 +438,7 @@ function MyChannelPage() {
                     <div className="flex flex-wrap gap-4 pb-4 pt-6">
                         <span className="relative -mt-12 inline-block h-28 w-28 shrink-0 overflow-hidden rounded-full border-2">
                             <img
-                                src="https://images.pexels.com/photos/1115816/pexels-photo-1115816.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                                src={user.avatar}
                                 alt="Channel"
                                 className="h-full w-full"
                             />
@@ -336,20 +450,7 @@ function MyChannelPage() {
                                             htmlFor="profile-image"
                                             className="inline-block h-8 w-8 cursor-pointer rounded-lg bg-white/60 p-1 text-[#ae7aff] hover:bg-white"
                                         >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                strokeWidth="1.5"
-                                                stroke="currentColor"
-                                                aria-hidden="true"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
-                                                />
-                                            </svg>
+                                            <UploadImg />
                                         </label>
                                     </div>
                                 )
@@ -357,7 +458,7 @@ function MyChannelPage() {
                         </span>
                         <div className="mr-auto inline-block">
                             <h1 className="font-bold text-xl">{user.fullname}</h1>
-                            <p className="text-sm text-gray-400">@reactpatterns</p>
+                            <p className="text-sm text-gray-400">@{user.username}</p>
                             <p className="text-sm text-gray-400">
                                 600k Subscribers&nbsp;·&nbsp;10 Subscribed
                             </p>
@@ -405,7 +506,7 @@ function MyChannelPage() {
                     {/* Tabs */}
                     {
                         edit ? (
-                            <ul class="no-scrollbar sticky top-[66px] z-[2] flex flex-row gap-x-2 overflow-auto border-b-2 border-gray-400 bg-[#121212] py-2 sm:top-[82px]">
+                            <ul className="no-scrollbar sticky top-[66px] z-[2] flex flex-row gap-x-2 overflow-auto border-b-2 border-gray-400 bg-[#121212] py-2 sm:top-[82px]">
                                 <li className="w-full">
                                     <button
                                         onClick={() => setEditActiveTab("PersonalInformation")}
@@ -417,7 +518,7 @@ function MyChannelPage() {
                                         Personal Information
                                     </button>
                                 </li>
-                                <li className="w-full">
+                                {/* <li className="w-full">
                                     <button
                                         onClick={() => setEditActiveTab("ChannelInformation")}
                                         className={`w-full border-b-2 px-3 py-1.5 ${editActivetab === "ChannelInformation"
@@ -427,7 +528,7 @@ function MyChannelPage() {
                                     >
                                         Channel Information
                                     </button>
-                                </li>
+                                </li> */}
                                 <li className="w-full">
                                     <button
                                         onClick={() => setEditActiveTab("ChangePassword")}
@@ -505,67 +606,86 @@ function MyChannelPage() {
                                         <div className="w-full sm:w-1/2 lg:w-2/3">
                                             <div className="rounded-lg border">
                                                 <div className="flex flex-wrap gap-y-4 p-4">
+                                                    {/* Username */}
                                                     <div className="w-full lg:w-1/2 lg:pr-2">
-                                                        <label htmlFor="firstname" className="mb-1 inline-block">
-                                                            First name
+                                                        <label htmlFor="username" className="mb-1 inline-block">
+                                                            Username
                                                         </label>
                                                         <input
                                                             type="text"
                                                             className="w-full rounded-lg border bg-transparent px-2 py-1.5"
-                                                            id="firstname"
-                                                            placeholder="Enter first name"
-                                                            defaultValue="React"
+                                                            id="username"
+                                                            placeholder="Enter username"
+                                                            value={updateUserProfile.username}
+                                                            name="username"
+                                                            onChange={handleUpdetedProfileChange}
                                                         />
+                                                        {updateUserProfileValidation.username && (
+                                                            <span className="error-message">Username is required</span>
+                                                        )}
                                                     </div>
+
+                                                    {/* Full name */}
                                                     <div className="w-full lg:w-1/2 lg:pl-2">
-                                                        <label htmlFor="lastname" className="mb-1 inline-block">
-                                                            Last name
+                                                        <label htmlFor="fullname" className="mb-1 inline-block">
+                                                            Full name
                                                         </label>
                                                         <input
                                                             type="text"
                                                             className="w-full rounded-lg border bg-transparent px-2 py-1.5"
-                                                            id="lastname"
-                                                            placeholder="Enter last name"
-                                                            defaultValue="Patterns"
+                                                            id="fullname"
+                                                            placeholder="Enter full name"
+                                                            value={updateUserProfile.fullname}
+                                                            name="fullname"
+                                                            onChange={handleUpdetedProfileChange}
                                                         />
+                                                        {updateUserProfileValidation.fullname && (
+                                                            <span className="error-message">Full name is required</span>
+                                                        )}
                                                     </div>
+
+                                                    {/* Email */}
                                                     <div className="w-full">
-                                                        <label htmlFor="lastname" className="mb-1 inline-block">
+                                                        <label htmlFor="email" className="mb-1 inline-block">
                                                             Email address
                                                         </label>
                                                         <div className="relative">
                                                             <div className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-300">
-                                                                <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    strokeWidth="1.5"
-                                                                    stroke="currentColor"
-                                                                    aria-hidden="true"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                                                                    />
-                                                                </svg>
+                                                                <Email />
                                                             </div>
                                                             <input
                                                                 type="email"
                                                                 className="w-full rounded-lg border bg-transparent py-1.5 pl-10 pr-2"
-                                                                id="lastname"
+                                                                id="email"
                                                                 placeholder="Enter email address"
-                                                                defaultValue="patternsreact@gmail.com"
+                                                                value={updateUserProfile.email}
+                                                                name="email"
+                                                                onChange={handleUpdetedProfileChange}
                                                             />
+                                                            {updateUserProfileValidation.email &&
+                                                                (updateUserProfile.email ? (
+                                                                    <span className="error-message">Invalid email</span>
+                                                                ) : (
+                                                                    <span className="error-message">Email is required</span>
+                                                                ))}
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                {errorMessage && (
+                                                    <div className="p-4 text-red-500 font-medium">{errorMessage}</div>
+                                                )}
+
                                                 <hr className="border border-gray-300" />
+
                                                 <div className="flex items-center justify-end gap-4 p-4">
                                                     <button className="inline-block rounded-lg border px-3 py-1.5 hover:bg-white/10">
                                                         Cancel
                                                     </button>
-                                                    <button className="inline-block bg-[#ae7aff] px-3 py-1.5 text-black">
+                                                    <button
+                                                        onClick={checkUpdateValidation}
+                                                        className="inline-block bg-[#ae7aff] px-3 py-1.5 text-black"
+                                                    >
                                                         Save changes
                                                     </button>
                                                 </div>
@@ -574,235 +694,55 @@ function MyChannelPage() {
                                     </div>
                                 )}
 
-                                {editActivetab === "ChannelInformation" && (
+
+
+                                {editActivetab === "ChangePassword" && (
                                     <div className="flex flex-wrap justify-center gap-y-4 py-4">
                                         <div className="w-full sm:w-1/2 lg:w-1/3">
-                                            <h5 className="font-semibold">Channel Info</h5>
-                                            <p className="text-gray-300">Update your Channel details here.</p>
+                                            <h5 className="font-semibold">Password</h5>
+                                            <p className="text-gray-300">
+                                                Please enter your current password to change your password.
+                                            </p>
                                         </div>
                                         <div className="w-full sm:w-1/2 lg:w-2/3">
                                             <div className="rounded-lg border">
                                                 <div className="flex flex-wrap gap-y-4 p-4">
                                                     <div className="w-full">
-                                                        <label className="mb-1 inline-block" htmlFor="username">
-                                                            Username
+                                                        <label className="mb-1 inline-block" htmlFor="old-pwd">
+                                                            Current password
                                                         </label>
-                                                        <div className="flex rounded-lg border">
-                                                            <p className="flex shrink-0 items-center border-r border-white px-3 align-middle">
-                                                                vidplay.com/
-                                                            </p>
-                                                            <input
-                                                                type="text"
-                                                                className="w-full bg-transparent px-2 py-1.5"
-                                                                id="username"
-                                                                placeholder="@username"
-                                                                defaultValue="reactpatterns"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="w-full">
-                                                        <label className="mb-1 inline-block" htmlFor="desc">
-                                                            Description
-                                                        </label>
-                                                        <textarea
+                                                        <input
+                                                            type="password"
                                                             className="w-full rounded-lg border bg-transparent px-2 py-1.5"
-                                                            rows={4}
-                                                            id="desc"
-                                                            placeholder="Channel Description"
-                                                            defaultValue={
-                                                                "I'm a Product Designer based in Melbourne, Australia. I specialise in UX/UI design, brand strategy, and Webflow development."
-                                                            }
+                                                            id="old-pwd"
+                                                            placeholder="Current password"
                                                         />
-                                                        <p className="mt-0.5 text-sm text-gray-300">275 characters left</p>
-                                                    </div>
-                                                    {/* <div className="flex w-full items-center gap-3">
-                                                        <div className="w-full max-w-xs rounded-lg border">
-                                                            <select className="w-full border-r-8 border-transparent bg-transparent py-1.5 pl-2">
-                                                                <option value="light">Light</option>
-                                                                <option value="regular" selected="">
-                                                                    Regular
-                                                                </option>
-                                                                <option value="semi-bold">Semi bold</option>
-                                                                <option value="bold">Bold</option>
-                                                                <option value="bolder">Bolder</option>
-                                                            </select>
-                                                        </div>
-                                                        <button className="h-6 w-6 hover:text-[#ae7aff] focus:text-[#ae7aff]">
-                                                            <svg
-                                                                width={11}
-                                                                height={14}
-                                                                viewBox="0 0 11 14"
-                                                                fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                            >
-                                                                <path
-                                                                    d="M8.6 6.79C9.57 6.12 10.25 5.02 10.25 4C10.25 1.74 8.5 0 6.25 0H0V14H7.04C9.13 14 10.75 12.3 10.75 10.21C10.75 8.69 9.89 7.39 8.6 6.79ZM3 2.5H6C6.83 2.5 7.5 3.17 7.5 4C7.5 4.83 6.83 5.5 6 5.5H3V2.5ZM6.5 11.5H3V8.5H6.5C7.33 8.5 8 9.17 8 10C8 10.83 7.33 11.5 6.5 11.5Z"
-                                                                    fill="currentColor"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                        <button className="h-6 w-6 hover:text-[#ae7aff] focus:text-[#ae7aff]">
-                                                            <svg
-                                                                width={12}
-                                                                height={14}
-                                                                viewBox="0 0 12 14"
-                                                                fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                            >
-                                                                <path
-                                                                    d="M4 0V3H6.21L2.79 11H0V14H8V11H5.79L9.21 3H12V0H4Z"
-                                                                    fill="currentColor"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                        <button className="h-6 w-6 hover:text-[#ae7aff] focus:text-[#ae7aff]">
-                                                            <svg
-                                                                width={20}
-                                                                height={10}
-                                                                viewBox="0 0 20 10"
-                                                                fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                            >
-                                                                <path
-                                                                    d="M1.9 5C1.9 3.29 3.29 1.9 5 1.9H9V0H5C2.24 0 0 2.24 0 5C0 7.76 2.24 10 5 10H9V8.1H5C3.29 8.1 1.9 6.71 1.9 5ZM6 6H14V4H6V6ZM15 0H11V1.9H15C16.71 1.9 18.1 3.29 18.1 5C18.1 6.71 16.71 8.1 15 8.1H11V10H15C17.76 10 20 7.76 20 5C20 2.24 17.76 0 15 0Z"
-                                                                    fill="currentColor"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                        <button className="h-6 w-6 hover:text-[#ae7aff] focus:text-[#ae7aff]">
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                fill="none"
-                                                                viewBox="0 0 24 24"
-                                                                strokeWidth="1.5"
-                                                                stroke="currentColor"
-                                                                aria-hidden="true"
-                                                            >
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                                                                />
-                                                            </svg>
-                                                        </button>
-                                                        <button className="h-6 w-6 hover:text-[#ae7aff] focus:text-[#ae7aff]">
-                                                            <svg
-                                                                width={19}
-                                                                height={16}
-                                                                viewBox="0 0 19 16"
-                                                                fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                            >
-                                                                <path
-                                                                    d="M0 13H2V13.5H1V14.5H2V15H0V16H3V12H0V13ZM1 4H2V0H0V1H1V4ZM0 7H1.8L0 9.1V10H3V9H1.2L3 6.9V6H0V7ZM5 1V3H19V1H5ZM5 15H19V13H5V15ZM5 9H19V7H5V9Z"
-                                                                    fill="currentColor"
-                                                                />
-                                                            </svg>
-                                                        </button>
                                                     </div>
                                                     <div className="w-full">
-                                                        <label className="mb-1 inline-block" htmlFor="timezone">
-                                                            Timezone
+                                                        <label className="mb-1 inline-block" htmlFor="new-pwd">
+                                                            New password
                                                         </label>
-                                                        <div className="relative w-full rounded-lg border">
-                                                            <div className="absolute left-2 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-300">
-                                                                <svg
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    strokeWidth="1.5"
-                                                                    stroke="currentColor"
-                                                                    aria-hidden="true"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                                    />
-                                                                </svg>
-                                                            </div>
-                                                            <select
-                                                                id="timezone"
-                                                                className="w-full border-r-8 border-transparent bg-transparent py-1.5 pl-8"
-                                                            >
-                                                                <option value="UTC-12:00">
-                                                                    (UTC-12:00) International Date Line West
-                                                                </option>
-                                                                <option value="UTC-11:00">
-                                                                    (UTC-11:00) Coordinated Universal Time-11
-                                                                </option>
-                                                                <option value="UTC-10:00">(UTC-10:00) Hawaii</option>
-                                                                <option value="UTC-09:00">(UTC-09:00) Alaska</option>
-                                                                <option value="UTC-08:00">
-                                                                    (UTC-08:00) Pacific Time (US &amp; Canada)
-                                                                </option>
-                                                                <option value="UTC-07:00">
-                                                                    (UTC-07:00) Mountain Time (US &amp; Canada)
-                                                                </option>
-                                                                <option value="UTC-06:00">
-                                                                    (UTC-06:00) Central Time (US &amp; Canada)
-                                                                </option>
-                                                                <option value="UTC-05:00">
-                                                                    (UTC-05:00) Eastern Time (US &amp; Canada)
-                                                                </option>
-                                                                <option value="UTC-04:00">
-                                                                    (UTC-04:00) Atlantic Time (Canada)
-                                                                </option>
-                                                                <option value="UTC-03:30">(UTC-03:30) Newfoundland</option>
-                                                                <option value="UTC-03:00">
-                                                                    (UTC-03:00) Buenos Aires, Georgetown
-                                                                </option>
-                                                                <option value="UTC-02:00">
-                                                                    (UTC-02:00) Coordinated Universal Time-02
-                                                                </option>
-                                                                <option value="UTC-01:00">(UTC-01:00) Azores</option>
-                                                                <option value="UTC+00:00">
-                                                                    (UTC+00:00) Coordinated Universal Time
-                                                                </option>
-                                                                <option value="UTC+01:00">
-                                                                    (UTC+01:00) Central European Time
-                                                                </option>
-                                                                <option value="UTC+02:00">
-                                                                    (UTC+02:00) Eastern European Time
-                                                                </option>
-                                                                <option value="UTC+03:00">
-                                                                    (UTC+03:00) Moscow, St. Petersburg
-                                                                </option>
-                                                                <option value="UTC+03:30">(UTC+03:30) Tehran</option>
-                                                                <option value="UTC+04:00">(UTC+04:00) Abu Dhabi, Muscat</option>
-                                                                <option value="UTC+04:30">(UTC+04:30) Kabul</option>
-                                                                <option value="UTC+05:00">(UTC+05:00) Tashkent</option>
-                                                                <option value="UTC+05:30" selected="">
-                                                                    (UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi
-                                                                </option>
-                                                                <option value="UTC+05:45">(UTC+05:45) Kathmandu</option>
-                                                                <option value="UTC+06:00">(UTC+06:00) Almaty, Novosibirsk</option>
-                                                                <option value="UTC+06:30">(UTC+06:30) Yangon (Rangoon)</option>
-                                                                <option value="UTC+07:00">
-                                                                    (UTC+07:00) Bangkok, Hanoi, Jakarta
-                                                                </option>
-                                                                <option value="UTC+08:00">
-                                                                    (UTC+08:00) Beijing, Chongqing, Hong Kong
-                                                                </option>
-                                                                <option value="UTC+08:45">(UTC+08:45) Eucla</option>
-                                                                <option value="UTC+09:00">
-                                                                    (UTC+09:00) Osaka, Sapporo, Tokyo
-                                                                </option>
-                                                                <option value="UTC+09:30">(UTC+09:30) Adelaide</option>
-                                                                <option value="UTC+09:45">(UTC+09:45) Darwin</option>
-                                                                <option value="UTC+10:00">(UTC+10:00) Brisbane</option>
-                                                                <option value="UTC+10:30">(UTC+10:30) Lord Howe Island</option>
-                                                                <option value="UTC+11:00">
-                                                                    (UTC+11:00) Solomon Is., New Caledonia
-                                                                </option>
-                                                                <option value="UTC+11:30">(UTC+11:30) Norfolk Island</option>
-                                                                <option value="UTC+12:00">(UTC+12:00) Fiji</option>
-                                                                <option value="UTC+12:45">(UTC+12:45) Chatham Islands</option>
-                                                                <option value="UTC+13:00">(UTC+13:00) Nuku'alofa</option>
-                                                                <option value="UTC+14:00">(UTC+14:00) Kiritimati</option>
-                                                            </select>
-                                                        </div>
-                                                    </div> */}
+                                                        <input
+                                                            type="password"
+                                                            className="w-full rounded-lg border bg-transparent px-2 py-1.5"
+                                                            id="new-pwd"
+                                                            placeholder="New password"
+                                                        />
+                                                        <p className="mt-0.5 text-sm text-gray-300">
+                                                            Your new password must be more than 8 characters.
+                                                        </p>
+                                                    </div>
+                                                    <div className="w-full">
+                                                        <label className="mb-1 inline-block" htmlFor="cnfrm-pwd">
+                                                            Confirm password
+                                                        </label>
+                                                        <input
+                                                            type="password"
+                                                            className="w-full rounded-lg border bg-transparent px-2 py-1.5"
+                                                            id="cnfrm-pwd"
+                                                            placeholder="Confirm password"
+                                                        />
+                                                    </div>
                                                 </div>
                                                 <hr className="border border-gray-300" />
                                                 <div className="flex items-center justify-end gap-4 p-4">
@@ -810,69 +750,13 @@ function MyChannelPage() {
                                                         Cancel
                                                     </button>
                                                     <button className="inline-block bg-[#ae7aff] px-3 py-1.5 text-black">
-                                                        Save changes
+                                                        Update Password
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                )}
 
-                                {editActivetab === "ChangePassword" && (
-                                    <div class="flex flex-wrap justify-center gap-y-4 py-4">
-                                        <div class="w-full sm:w-1/2 lg:w-1/3">
-                                            <h5 class="font-semibold">Password</h5>
-                                            <p class="text-gray-300">Please enter your current password to change your password.</p>
-                                        </div>
-                                        <div class="w-full sm:w-1/2 lg:w-2/3">
-                                            <div class="rounded-lg border">
-                                                <div class="flex flex-wrap gap-y-4 p-4">
-                                                    <div class="w-full">
-                                                        <label
-                                                            class="mb-1 inline-block"
-                                                            for="old-pwd">
-                                                            Current password
-                                                        </label>
-                                                        <input
-                                                            type="password"
-                                                            class="w-full rounded-lg border bg-transparent px-2 py-1.5"
-                                                            id="old-pwd"
-                                                            placeholder="Current password" />
-                                                    </div>
-                                                    <div class="w-full">
-                                                        <label
-                                                            class="mb-1 inline-block"
-                                                            for="new-pwd">
-                                                            New password
-                                                        </label>
-                                                        <input
-                                                            type="password"
-                                                            class="w-full rounded-lg border bg-transparent px-2 py-1.5"
-                                                            id="new-pwd"
-                                                            placeholder="New password" />
-                                                        <p class="mt-0.5 text-sm text-gray-300">Your new password must be more than 8 characters.</p>
-                                                    </div>
-                                                    <div class="w-full">
-                                                        <label
-                                                            class="mb-1 inline-block"
-                                                            for="cnfrm-pwd">
-                                                            Confirm password
-                                                        </label>
-                                                        <input
-                                                            type="password"
-                                                            class="w-full rounded-lg border bg-transparent px-2 py-1.5"
-                                                            id="cnfrm-pwd"
-                                                            placeholder="Confirm password" />
-                                                    </div>
-                                                </div>
-                                                <hr class="border border-gray-300" />
-                                                <div class="flex items-center justify-end gap-4 p-4">
-                                                    <button class="inline-block rounded-lg border px-3 py-1.5 hover:bg-white/10">Cancel</button>
-                                                    <button class="inline-block bg-[#ae7aff] px-3 py-1.5 text-black">Update Password</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 )}
                             </div>
                         ) : (

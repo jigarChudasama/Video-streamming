@@ -260,14 +260,15 @@ const getCurrntUser = asyncHandler(async (req, res) => {
 
 // =================== update user  ===================
 const updateUserDetail = asyncHandler(async (req, res) => {
-    const { fullname, email } = req.body
+    const { fullname, email , username } = req.body
 
     const user = await User.findByIdAndUpdate(
         req.user._id,
         {
             $set: {
                 fullname: fullname,
-                email: email
+                email: email,
+                username : username
             }
         },
         {
